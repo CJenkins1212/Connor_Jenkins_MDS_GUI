@@ -1,15 +1,44 @@
 import java.io.File;
 import java.io.FileReader;
+import java.sql.*;
 import java.util.List;
 import java.util.Scanner;
 
-/*The Controller class uses variables from the Model class in order to perform CRUD operations for the Medical Database Management System
-it takes input from the GUI and displays the outputs there as well but also prints out results to console for bug testing purposes.
-*/
+/**
+ * The Controller class is where the functions that are called by the GUI and interact with the database are stored.
+ * All CRUD operations for the database are inside the class.
+ */
 class Controller{
+    //Sets database file
+    static String url = "";
+    //queries to manipulate database
+    String query = "Select Name, BloodType, Age, BloodPressure, Height, Weight From people_data";
+    String enter = "INSERT INTO people_data(Name, BloodType, Age, BloodPressure, Height, Weight) VALUES (?, ?, ?, ?, ?, ?)";
+    String remove = "DELETE FROM people_data WHERE Name = ? AND BloodType = ?";
+
     Model M1 = new Model();
 
-    //Function to print entire main list
+    /**
+     * The Controller constructor sets up the connection to the database before the GUI shows up.
+     */
+    Controller(){
+        //User prompt
+        System.out.println("Enter database path");
+        //Takes path
+        Scanner sc = new Scanner(System.in);
+        //Holds database file
+        url = sc.nextLine();
+        try {
+            Connection con = DriverManager.getConnection(url);
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * This prints the entire People list to console.
+     */
     public void printPeople() {
         //Iterates through main list and then prints the entire sub-list
         for(int i = 0; i < M1.People.size(); i++){
@@ -19,6 +48,16 @@ class Controller{
         }
     }
 
+    /**
+     * This function adds a single person to the database through user input.
+     * The data comes from the GUI.
+     * @param name
+     * @param type
+     * @param age
+     * @param pressure
+     * @param height
+     * @param weight
+     */
     public void addManual(String name, String type, int age, float pressure, float height, float weight) {
         String patch;
         M1.real = 0;
@@ -71,21 +110,51 @@ class Controller{
             return;
         }
         //Compares the name and blood type of the new person with all the people inside the list
-        for(int i = 0; i < M1.People.size(); i++){
-            //Temporarily takes item from main list
-            M1.Hold = (List<Object>) M1.People.get(i);
-            System.out.println(M1.Hold + "\n" + M1.Person);
-            if((M1.Hold.get(0).toString().equals(M1.Person.get(0).toString())) && (M1.Hold.get(1).toString().equals(M1.Person.get(1).toString()))){
-                //If the name and blood type matches real is set to 1
-                M1.real = 1;
-                //Alerts user of any people that did not get added to list
-                System.out.println(M1.Person.get(0) + " did not get added to people because that person already exists.");
+        try {
+            //gives access to database
+            Connection con = DriverManager.getConnection(url);
+            PreparedStatement preInto = con.prepareStatement(enter);
+            PreparedStatement preOut = con.prepareStatement(remove);
+            Statement statement = con.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                //Puts name and bloodType into variables
+                String verN = resultSet.getString(1);
+                String verT = resultSet.getString(2);
+
+                if ((verN.equals(M1.Person.get(0).toString())) && (verT.equals(M1.Person.get(1).toString()))) {
+                    //If the name and blood type matches real is set to 1
+                    M1.real = 1;
+                    //Alerts user of any people that did not get added to list
+                    System.out.println(M1.Person.get(0) + " did not get added to people because that person already exists.");
+                }
             }
-        }
+        } catch (SQLException r){}
 
         //If real hasn't been set to 1 because the name and blood type matches a copy of the person will be added to the list
         if(M1.real == 0){
-            M1.People.add(M1.Person.clone());
+            try{
+                //gives access to database
+                Connection con = DriverManager.getConnection(url);
+                PreparedStatement preInto = con.prepareStatement(enter);
+                PreparedStatement preOut = con.prepareStatement(remove);
+                Statement statement = con.createStatement();
+                ResultSet resultSet = statement.executeQuery(query);
+
+                //Sets data to enter database
+                preInto.setString(1, M1.Person.get(0).toString());
+                preInto.setString(2, M1.Person.get(1).toString());
+                preInto.setInt(3, Integer.parseInt(M1.Person.get(2).toString()));
+                preInto.setFloat(4, Float.parseFloat(M1.Person.get(3).toString()));
+                preInto.setFloat(5, Float.parseFloat(M1.Person.get(4).toString()));
+                preInto.setFloat(6, Float.parseFloat(M1.Person.get(5).toString()));
+
+                //Inserts to database
+                int rowsInserted = preInto.executeUpdate();
+                con.close();
+            }
+            catch(Exception e){}
         }
         //Empties person when done
         M1.Person.clear();
@@ -93,7 +162,11 @@ class Controller{
         printPeople();
     }
 
-    //Adds people to list from file
+    /**
+     * This function takes a file and adds the people inside into the database.
+     * The file path is taken from the GUI.
+     * @param path
+     */
     public void addFile(File path){
         try{
             //Initializes FileReader to take file
@@ -156,20 +229,51 @@ class Controller{
                 }
 
                 //Compares the name and blood type of the new person with all the people inside the list
-                for(int i = 0; i < M1.People.size(); i++){
-                    //Temporarily takes item from main list
-                    M1.Hold = (List<Object>) M1.People.get(i);
-                    if((M1.Hold.get(0).toString().equals(M1.Person.get(0).toString())) && (M1.Hold.get(1).toString().equals(M1.Person.get(1).toString()))){
-                        //If the name and blood type matches real is set to 1
-                        M1.real = 1;
-                        //Alerts user of any people that did not get added to list
-                        System.out.println(M1.Person.get(0) + " did not get added to people because the data was invalid.");
+                try {
+                    //gives access to database
+                    Connection con = DriverManager.getConnection(url);
+                    PreparedStatement preInto = con.prepareStatement(enter);
+                    PreparedStatement preOut = con.prepareStatement(remove);
+                    Statement statement = con.createStatement();
+                    ResultSet resultSet = statement.executeQuery(query);
+
+                    while (resultSet.next()) {
+                        //Puts name and bloodType into variables
+                        String verN = resultSet.getString(1);
+                        String verT = resultSet.getString(2);
+
+                        if ((verN.equals(M1.Person.get(0).toString())) && (verT.equals(M1.Person.get(1).toString()))) {
+                            //If the name and blood type matches real is set to 1
+                            M1.real = 1;
+                            //Alerts user of any people that did not get added to list
+                            System.out.println(M1.Person.get(0) + " did not get added to people because that person already exists.");
+                        }
                     }
-                }
+                } catch (SQLException r){}
 
                 //If real hasn't been set to 1 because the ID matches a copy of the person will be added to the list
                 if(M1.real == 0){
-                    M1.People.add(M1.Person.clone());
+                    try{
+                        //gives access to database
+                        Connection con = DriverManager.getConnection(url);
+                        PreparedStatement preInto = con.prepareStatement(enter);
+                        PreparedStatement preOut = con.prepareStatement(remove);
+                        Statement statement = con.createStatement();
+                        ResultSet resultSet = statement.executeQuery(query);
+
+                        //Sets data to enter database
+                        preInto.setString(1, M1.Person.get(0).toString());
+                        preInto.setString(2, M1.Person.get(1).toString());
+                        preInto.setInt(3, Integer.parseInt(M1.Person.get(2).toString()));
+                        preInto.setFloat(4, Float.parseFloat(M1.Person.get(3).toString()));
+                        preInto.setFloat(5, Float.parseFloat(M1.Person.get(4).toString()));
+                        preInto.setFloat(6, Float.parseFloat(M1.Person.get(5).toString()));
+
+                        //Inserts to database
+                        int rowsInserted = preInto.executeUpdate();
+                        con.close();
+                    }
+                    catch(Exception e){}
                 }
                 else{
                     System.out.println(M1.Person.get(0) + " did not get added to people because that person already exists or is formated incorrectly.");
@@ -186,6 +290,12 @@ class Controller{
         printPeople();
     }
 
+    /**
+     * This function removes a person from the database.
+     * It takes the location from the GUI.
+     * @param name
+     * @param type
+     */
     public void removePerson(String name, String type){
         //User prompt
         System.out.println("Enter name of person to remove");
@@ -197,21 +307,36 @@ class Controller{
             System.out.println("That is not a valid blood type");
             return;
         }
-        //Goes through list checking name and blood type
-        for(int i = 0; i < M1.People.size(); i++){
-            //Temporarily takes item from main list
-            M1.Hold = (List<Object>) M1.People.get(i);
-            //If the name and blood type entered are the same as any person in the list, the person is removed
-            if((M1.Hold.get(0).toString().equals(M1.namL)) && (M1.Hold.get(1).toString().equals(M1.typL))){
-                M1.NaDe = (String) M1.Hold.get(0);
-                M1.People.remove(i);
-                //Used to check if a person matched
-                M1.check = 1;
+        //Goes through database checking name and blood type
+        try {
+            //gives access to database
+            Connection con = DriverManager.getConnection(url);
+            PreparedStatement preInto = con.prepareStatement(enter);
+            PreparedStatement preOut = con.prepareStatement(remove);
+            Statement statement = con.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                //Puts name and bloodType into variables
+                String verN = resultSet.getString(1);
+                String verT = resultSet.getString(2);
+
+                if ((verN.equals(M1.namL)) && (verT.equals(M1.typL))) {
+                    //Sets location to be deleted
+                    preOut.setString(1, M1.namL);
+                    preOut.setString(2, M1.typL);
+
+                    //Deletes from database
+                    int rowsDeleted = preOut.executeUpdate();
+
+                    //Used to check if a person matched
+                    M1.check = 1;
+                    con.close();
+                }
             }
-        }
+        } catch (SQLException r){}
         //Alerts user what book was removed
         if(M1.check == 1){
-            System.out.println(M1.NaDe + " removed.");
             //Prints updated list
             printPeople();
         }
@@ -221,6 +346,18 @@ class Controller{
         }
     }
 
+    /**
+     * This function edits a person in the database.
+     * The location and new values are taken from the GUI.
+     * @param nameP
+     * @param typeP
+     * @param name
+     * @param type
+     * @param age
+     * @param pressure
+     * @param height
+     * @param weight
+     */
     public void editPerson(String nameP, String typeP, String name, String type, String age, String pressure, String height, String weight){
         //User prompt
         System.out.println("Enter name of person to edit");
@@ -233,21 +370,42 @@ class Controller{
             return;
         }
         M1.Person.clear();
-        //Goes through list checking name and blood type
-        for(int i = 0; i < M1.People.size(); i++){
-            //Temporarily takes item from main list
-            M1.Hold = (List<Object>) M1.People.get(i);
-            //If the name and blood type entered are the same as any person in the list, the person's location is put in loc
-            if((M1.Hold.get(0).toString().equals(M1.namL)) && (M1.Hold.get(1).toString().equals(M1.typL))){
-                M1.loc = i;
-                //stores correct person
-                for(int j = 0; j < M1.Hold.size(); j++){
-                    M1.Person.add(M1.Hold.get(j));
+        //Goes through database checking name and blood type
+        try {
+            //gives access to database
+            Connection con = DriverManager.getConnection(url);
+            PreparedStatement preInto = con.prepareStatement(enter);
+            PreparedStatement preOut = con.prepareStatement(remove);
+            Statement statement = con.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                //Puts name and bloodType into variables
+                String verN = resultSet.getString(1);
+                String verT = resultSet.getString(2);
+
+                if ((verN.equals(M1.namL)) && (verT.equals(M1.typL))) {
+                    //Sets location to be deleted
+                    preOut.setString(1, M1.namL);
+                    preOut.setString(2, M1.typL);
+
+                    //Stores match in Person
+                    M1.Person.add(resultSet.getString(1));
+                    M1.Person.add(resultSet.getString(2));
+                    M1.Person.add(resultSet.getInt(3));
+                    M1.Person.add(resultSet.getFloat(4));
+                    M1.Person.add(resultSet.getFloat(5));
+                    M1.Person.add(resultSet.getFloat(6));
+
+                    //removes match
+                    int rowsDeleted = preOut.executeUpdate();
+
+                    //Used to check if a person matched
+                    M1.check = 1;
+                    con.close();
                 }
-                //Used to check if a person matched
-                M1.check = 1;
             }
-        }
+        } catch (SQLException r){}
         //Alerts user what book was removed
         if(M1.check == 1){
             //takes new variables to replace person
@@ -297,9 +455,27 @@ class Controller{
                 }
             }
 
-            //replaces the person with the updated version
-            M1.People.remove(M1.loc);
-            M1.People.add(M1.Person.clone());
+            try{
+                //gives access to database
+                Connection con = DriverManager.getConnection(url);
+                PreparedStatement preInto = con.prepareStatement(enter);
+                PreparedStatement preOut = con.prepareStatement(remove);
+                Statement statement = con.createStatement();
+                ResultSet resultSet = statement.executeQuery(query);
+
+                //Sets data to enter database
+                preInto.setString(1, M1.Person.get(0).toString());
+                preInto.setString(2, M1.Person.get(1).toString());
+                preInto.setInt(3, Integer.parseInt(M1.Person.get(2).toString()));
+                preInto.setFloat(4, Float.parseFloat(M1.Person.get(3).toString()));
+                preInto.setFloat(5, Float.parseFloat(M1.Person.get(4).toString()));
+                preInto.setFloat(6, Float.parseFloat(M1.Person.get(5).toString()));
+
+                //replaces the person with the updated version
+                int rowsInserted = preInto.executeUpdate();
+                con.close();
+            }
+            catch(Exception e){}
             //Prints updated list
             printPeople();
         }
@@ -309,6 +485,12 @@ class Controller{
         }
     }
 
+    /**
+     * This function calculates the BMI of one person in the database.
+     * It takes the location from the GUI.
+     * @param name
+     * @param type
+     */
     public void getBMI(String name, String type){
         //User prompt
         System.out.println("Enter name of person to get bmi of");
@@ -320,27 +502,25 @@ class Controller{
             System.out.println("That is not a valid blood type");
             return;
         }
-        //Goes through list checking name and blood type
-        for(int i = 0; i < M1.People.size(); i++){
-            //Temporarily takes item from main list
-            M1.Hold = (List<Object>) M1.People.get(i);
-            //If the name and blood type entered are the same as any person in the list, the person's location is put in loc
-            if((M1.Hold.get(0).toString().equals(M1.namL)) && (M1.Hold.get(1).toString().equals(M1.typL))){
-                M1.loc = i;
-                for(int j = 0; j <M1.Hold.size(); j++){
-                    M1.Person.add(M1.Hold.get(j));
+        try {
+            //gives access to database
+            Connection con = DriverManager.getConnection(url);
+            PreparedStatement preInto = con.prepareStatement(enter);
+            PreparedStatement preOut = con.prepareStatement(remove);
+            Statement statement = con.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                //Puts name and bloodType into variables
+                String verN = resultSet.getString(1);
+                String verT = resultSet.getString(2);
+
+                if ((verN.equals(M1.namL)) && (verT.equals(M1.typL))) {
+                    //calculates BMI
+                    M1.bmi = resultSet.getFloat(6) / (resultSet.getFloat(5) * resultSet.getFloat(5)) * 703;
                 }
-                //Used to check if a book matched
-                M1.check = 1;
             }
-        }
-        if(M1.check == 1){
-            //Calculates and prints BMI
-            M1.bmi = Float.parseFloat((M1.Person.get(5)).toString()) / (Float.parseFloat((M1.Person.get(4)).toString()) * Float.parseFloat((M1.Person.get(4)).toString())) * 703;
-            System.out.println("The BMI of " + M1.Person.get(0) + " is " + M1.bmi);
-        }
-        else{
-            System.out.println("This person does not exist");
-        }
+            con.close();
+        } catch (SQLException r){}
     }
 }
