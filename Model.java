@@ -2,9 +2,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-/*The Model class stores the variables that the other classes use to perform their functions
-it has no input or output by itself.
-*/
+/**
+ * The Model class is where most of the variables are kept.
+ */
 class Model {
     //Initializes assorted objects
     static List<Object> People = new ArrayList<>();
