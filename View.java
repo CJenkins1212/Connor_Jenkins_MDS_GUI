@@ -1,16 +1,20 @@
-import javax.swing.*;
+mport javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.*;
 import java.util.List;
 
-/* The View class give the user the options to interact with the functions of the controller class
-through a GUI, it takes the user's input through text fields, chooses which function through buttons, and outputs to lists and labels.
-*/
+/**
+ * The View class creates the GUI for users to interact with.
+ * The GUI interacts with the functions of the Controller class.
+ * User input is taken through text fields and buttons select the function used.
+ * The results of the functions will be output on either a list or label.
+ */
 class View implements ActionListener {
     //lets the functions and variables of other classes be used
-    Controller C1 = new Controller();
     Model M1 = new Model();
+    static Controller C1 = new Controller();
     //initializes variables needed for actionListener
     static JTextField ta1;
     static JTextField ta2;
@@ -24,6 +28,9 @@ class View implements ActionListener {
     static JList<Object> l1;
     static DefaultListModel<Object> listModel;
 
+    /**
+     * The main function.
+     */
     public static void main(String[] args) {
         //creates base frame
         JFrame f1 = new JFrame("MDS");
@@ -141,9 +148,36 @@ class View implements ActionListener {
 
         //sets GUI
         f1.setVisible(true);
+
+        try {
+            //Allows access to database
+            Connection con = DriverManager.getConnection(C1.url);
+            Statement statement = con.createStatement();
+            ResultSet resultSet = statement.executeQuery(C1.query);
+            //iterates through database
+            while (resultSet.next()) {
+                //Sets all columns
+                String ln = resultSet.getString(1);
+                String lt = resultSet.getString(2);
+                int la = resultSet.getInt(3);
+                float lp = resultSet.getFloat(4);
+                float lh = resultSet.getFloat(5);
+                float lw = resultSet.getFloat(6);
+
+                //Puts items in list
+                List<Object> Hol = List.of(ln, lt, la, lp, lh, lw);
+                //Adds database item to list
+                listModel.addElement(Hol);
+            }
+        }
+        catch (SQLException s) {}
     }
 
-    //defines actionListener
+    /**
+     * The actionPerformed defines how the buttons of the GUI will act when clicked.
+     * Based on the contents of the buttons they will trigger different commands when clicked.
+     * @param e the event to be processed
+     */
     public void actionPerformed(ActionEvent e) {
 
         //gets button name
@@ -155,13 +189,28 @@ class View implements ActionListener {
                 C1.addManual(ta1.getText(), ta2.getText(), Integer.parseInt(ta3.getText()), Float.parseFloat(ta4.getText()), Float.parseFloat(ta5.getText()), Float.parseFloat(ta6.getText()));
                 //empties list
                 listModel.clear();
-                //iterates through People
-                for (int i = 0; i < M1.People.size(); i++) {
-                    //Takes item from main list for temporary use
-                    M1.Hold = (List<Object>) M1.People.get(i);
-                    //add contents of people to the list
-                    listModel.addElement(M1.Hold);
+                try {
+                    //Allows access to database
+                    Connection con = DriverManager.getConnection(C1.url);
+                    Statement statement = con.createStatement();
+                    ResultSet resultSet = statement.executeQuery(C1.query);
+                    //iterates through database
+                    while (resultSet.next()) {
+                        //Sets all columns
+                        String ln = resultSet.getString(1);
+                        String lt = resultSet.getString(2);
+                        int la = resultSet.getInt(3);
+                        float lp = resultSet.getFloat(4);
+                        float lh = resultSet.getFloat(5);
+                        float lw = resultSet.getFloat(6);
+
+                        //Puts items in list
+                        List<Object> Hol = List.of(ln, lt, la, lp, lh, lw);
+                        //Adds database item to list
+                        listModel.addElement(Hol);
+                    }
                 }
+                catch (SQLException s) {}
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
@@ -183,23 +232,56 @@ class View implements ActionListener {
 
             //clears list
             listModel.clear();
-            for (int i = 0; i < M1.People.size(); i++) {
-                //Takes item from main list for temporary use
-                M1.Hold = (List<Object>) M1.People.get(i);
-                //adds people to list
-                listModel.addElement(M1.Hold);
+
+            try {
+                //Allows access to database
+                Connection con = DriverManager.getConnection(C1.url);
+                Statement statement = con.createStatement();
+                ResultSet resultSet = statement.executeQuery(C1.query);
+                //iterates through database
+                while (resultSet.next()) {
+                    //Sets all columns
+                    String ln = resultSet.getString(1);
+                    String lt = resultSet.getString(2);
+                    int la = resultSet.getInt(3);
+                    float lp = resultSet.getFloat(4);
+                    float lh = resultSet.getFloat(5);
+                    float lw = resultSet.getFloat(6);
+
+                    //Puts items in list
+                    List<Object> Hol = List.of(ln, lt, la, lp, lh, lw);
+                    //Adds database item to list
+                    listModel.addElement(Hol);
+                }
             }
+            catch (SQLException s) {}
         } else if (act.equals("Remove Person")) {
             //calls removePerson with location taken from text fields
             C1.removePerson(tr1.getText(), tr2.getText());
             //clears list
             listModel.clear();
-            for (int i = 0; i < M1.People.size(); i++) {
-                //Takes item from main list for temporary use
-                M1.Hold = (List<Object>) M1.People.get(i);
-                //adds people to list
-                listModel.addElement(M1.Hold);
+            try {
+                //Allows access to database
+                Connection con = DriverManager.getConnection(C1.url);
+                Statement statement = con.createStatement();
+                ResultSet resultSet = statement.executeQuery(C1.query);
+                //iterates through database
+                while (resultSet.next()) {
+                    //Sets all columns
+                    String ln = resultSet.getString(1);
+                    String lt = resultSet.getString(2);
+                    int la = resultSet.getInt(3);
+                    float lp = resultSet.getFloat(4);
+                    float lh = resultSet.getFloat(5);
+                    float lw = resultSet.getFloat(6);
+
+                    //Puts items in list
+                    List<Object> Hol = List.of(ln, lt, la, lp, lh, lw);
+                    //Adds database item to list
+                    listModel.addElement(Hol);
+                }
             }
+            catch (SQLException s) {}
             //clears location text fields
             tr1.setText("");
             tr2.setText("");
@@ -219,12 +301,28 @@ class View implements ActionListener {
                 C1.editPerson(tr1.getText(), tr2.getText(), ta1.getText(), ta2.getText(), ta3.getText(), ta4.getText(), ta5.getText(), ta6.getText());
                 //empties list
                 listModel.clear();
-                for (int i = 0; i < M1.People.size(); i++) {
-                    //Takes item from main list for temporary use
-                    M1.Hold = (List<Object>) M1.People.get(i);
-                    //adds people to list
-                    listModel.addElement(M1.Hold);
+                try {
+                    //Allows access to database
+                    Connection con = DriverManager.getConnection(C1.url);
+                    Statement statement = con.createStatement();
+                    ResultSet resultSet = statement.executeQuery(C1.query);
+                    //iterates through database
+                    while (resultSet.next()) {
+                        //Sets all columns
+                        String ln = resultSet.getString(1);
+                        String lt = resultSet.getString(2);
+                        int la = resultSet.getInt(3);
+                        float lp = resultSet.getFloat(4);
+                        float lh = resultSet.getFloat(5);
+                        float lw = resultSet.getFloat(6);
+
+                        //Puts items in list
+                        List<Object> Hol = List.of(ln, lt, la, lp, lh, lw);
+                        //Adds database item to list
+                        listModel.addElement(Hol);
+                    }
                 }
+                catch (SQLException s) {}
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
