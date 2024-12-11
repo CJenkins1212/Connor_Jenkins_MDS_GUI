@@ -51,12 +51,12 @@ class Controller{
     /**
      * This function adds a single person to the database through user input.
      * The data comes from the GUI.
-     * @param name
-     * @param type
-     * @param age
-     * @param pressure
-     * @param height
-     * @param weight
+     * @param name name of new person
+     * @param type blood type of new person
+     * @param age age of new person
+     * @param pressure blood pressure of new person
+     * @param height height of new person
+     * @param weight weight of new person
      */
     public void addManual(String name, String type, int age, float pressure, float height, float weight) {
         String patch;
@@ -165,7 +165,7 @@ class Controller{
     /**
      * This function takes a file and adds the people inside into the database.
      * The file path is taken from the GUI.
-     * @param path
+     * @param path the file path used
      */
     public void addFile(File path){
         try{
@@ -293,8 +293,8 @@ class Controller{
     /**
      * This function removes a person from the database.
      * It takes the location from the GUI.
-     * @param name
-     * @param type
+     * @param name name of person and used to find them in database
+     * @param type blood type of person and used to find them in database
      */
     public void removePerson(String name, String type){
         //User prompt
@@ -349,14 +349,14 @@ class Controller{
     /**
      * This function edits a person in the database.
      * The location and new values are taken from the GUI.
-     * @param nameP
-     * @param typeP
-     * @param name
-     * @param type
-     * @param age
-     * @param pressure
-     * @param height
-     * @param weight
+     * @param nameP name of person and used to find them in database
+     * @param typeP blood type of person and used to find them in database
+     * @param name new name of person
+     * @param type new blood type of person
+     * @param age new age of person
+     * @param pressure new blood pressure of person
+     * @param height new height of person
+     * @param weight new weight of person
      */
     public void editPerson(String nameP, String typeP, String name, String type, String age, String pressure, String height, String weight){
         //User prompt
@@ -488,8 +488,8 @@ class Controller{
     /**
      * This function calculates the BMI of one person in the database.
      * It takes the location from the GUI.
-     * @param name
-     * @param type
+     * @param name name of person and used to find them in database
+     * @param type blood type of person and used to find them in database
      */
     public void getBMI(String name, String type){
         //User prompt
